@@ -40,23 +40,25 @@ export default function Header() {
         </Link>
       </nav>
 
-      {/* Profile + Logout + Current Route */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-500">{pathname}</span>
-        <Image
-          src="/omar.jpg"
-          alt="Perfil"
-          width={40}
-          height={40}
-          className="rounded-full"
-        />
-        <button
-          onClick={handleLogout}
-          className="bg-red-800 text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors duration-100"
-        >
-          Logout
-        </button>
-      </div>
+{/* Profile + Logout + Current Route */}
+<div className="flex items-center gap-8">
+  <span className="text-sm text-gray-500">{pathname}</span>
+  <div className="relative w-[40px] h-[40px] rounded-full overflow-hidden flex-shrink-0">
+    <Image
+      src="/omar.jpg"
+      alt="Perfil"
+      fill
+      className="object-cover object-center"
+    />
+  </div>
+  <button
+    onClick={handleLogout}
+    className="bg-red-700 text-sm text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors duration-100"
+  >
+    Logout
+  </button>
+</div>
+
     </header>
   );
 }
