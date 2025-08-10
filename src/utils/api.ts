@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 const API_BASE_URL = 'http://localhost:1311';
 
 // Create an axios instance for common config (baseURL, timeouts, interceptors, etc.)
-const apiClient: AxiosInstance = axios.create({
+export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10_000, // 10 seconds
 });

@@ -47,19 +47,21 @@ export const AnnualSummary: React.FC<{ defaultYear: number }> = ({ defaultYear }
           <div className="bg-white p-4 rounded-xl text-center shadow">
             <h3 className="text-gray-500 text-sm">Ingresos</h3>
             <p className="text-green-700 font-bold text-lg">
-              ${summary.incomes.toFixed(2)}
+              ${summary.incomes?summary.incomes.toFixed(2) : 'Sin registro'}
             </p>
           </div>
           <div className="bg-white p-4 rounded-xl text-center shadow">
             <h3 className="text-gray-500 text-sm">Egresos</h3>
             <p className="text-red-700 font-bold text-lg">
-              ${summary.expenses.toFixed(2)}
+              ${summary.expenses? summary.expenses.toFixed(2) : 'Sin registro'}
             </p>
           </div>
           <div className="bg-white p-4 rounded-xl text-center shadow">
             <h3 className="text-gray-500 text-sm">Balance Neto</h3>
             <p className="text-gray-700 font-bold text-lg">
-              ${(summary.incomes - summary.expenses).toFixed(2)}
+              ${summary.incomes && summary.expenses
+                ? (summary.incomes - summary.expenses).toFixed(2)
+                : 'Sin registro'}
             </p>
           </div>
         </div>

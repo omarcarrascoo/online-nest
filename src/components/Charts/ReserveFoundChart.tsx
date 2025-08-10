@@ -2,7 +2,7 @@
 
 "use client";
 import React, { useState, useEffect } from 'react';
-import { getReserveFund } from '../..//utils/api';
+import { getReserveFund } from '../../utils/api';
 
 /**
  * ReserveFund component displays breakdown and usage bar for the reserve fund data.
