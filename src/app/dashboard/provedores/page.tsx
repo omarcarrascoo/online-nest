@@ -166,7 +166,14 @@ export function ProvidersList() {
                 {p.isActive ? "Activo" : "Inactivo"}
               </span>
               <Link
-                href={`/dashboard/provedores/${p.id}`}
+                href={{
+                  pathname: `/dashboard/provedores/${p.id}`,
+                  query: {
+                    data: typeof window !== "undefined"
+                    ? btoa(JSON.stringify(p))
+                    : undefined,
+                  },
+                }}
                 onClick={() => {
                   sessionStorage.setItem("providerData", JSON.stringify(p));
                 }}

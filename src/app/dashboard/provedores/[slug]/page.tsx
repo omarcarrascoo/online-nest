@@ -131,7 +131,7 @@ export default function ProviderPage({ params }: { params: { id: string } }): JS
   const handleCancelEdit = () => setEditMode(false);
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
-    apiClient.put(`/providers/${id}`, formData).then(res => {
+    apiClient.put(`/providers/${provider.id}`, formData).then(res => {
       setProvider(res.data);
       setEditMode(false);
     }).catch(() => alert("Error al guardar"));
@@ -139,8 +139,8 @@ export default function ProviderPage({ params }: { params: { id: string } }): JS
   const openDeleteModal = () => { setDeleteInput(""); setShowDeleteModal(true); };
   const closeDeleteModal = () => setShowDeleteModal(false);
   const confirmDelete = () => {
-    apiClient.delete(`/providers/${id}`)
-      .then(() => router.push("/dashboard/providers"))
+    apiClient.delete(`/providers/${provider.id}`)
+      .then(() => router.push("/dashboard/provedores"))
       .catch(() => alert("Error al eliminar"));
   };
 

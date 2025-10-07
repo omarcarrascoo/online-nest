@@ -191,7 +191,7 @@ export default function AddProvider(): JSX.Element {
     try {
       const payload = sanitizeForm(form);
       await apiClient.post("/providers", payload);
-      router.push("/providers");
+      router.push("/dashboard/provedores");
     } catch {
       alert("Error guardando proveedor");
     } finally {

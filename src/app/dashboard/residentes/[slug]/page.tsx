@@ -13,6 +13,10 @@ import {
   TagIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
+import NestInfoCard from "@/components/cards/NestInfoCard";
+import NestTitleMain from "@/components/Titles/NestMainTitle";
+import NestCardSimpleRow from "@/components/cards/rows/NestCardSimpleRow";
+import NestBannerPrincipal from "@/components/banners/NestBannerPrincipal";
 
 interface Contact {
   id?: string;
@@ -79,10 +83,7 @@ interface Resident {
 const renderRows = (items: [string, string | number][]) => (
   <div className="divide-y divide-gray-100">
     {items.map(([label, value]) => (
-      <div key={label} className="flex justify-between py-2">
-        <span className="text-gray-500 uppercase text-xs">{label}</span>
-        <span className="text-gray-900 font-normal">{value ?? "—"}</span>
-      </div>
+      <NestCardSimpleRow key={label} label={label} value={value}/>
     ))}
   </div>
 );
@@ -180,9 +181,8 @@ export default function ResidentPage({ params }: { params: { id: string } }): JS
     <div className="relative max-w-6xl mx-auto px-4 py-8 space-y-8">
 
       {/* Header con acciones */}
-      <header>
-        <div className="flex items-center justify-between bg-gradient-to-r from-[#063a58] via-teal-700 to-[#1b3d50] rounded-md px-4 py-6">
-          <div>
+      <NestBannerPrincipal>
+        <div>
             <h1 className="text-2xl font-bold text-white">
               Residentes: {resident.fullName ?? "—"}
             </h1>
@@ -222,9 +222,8 @@ export default function ResidentPage({ params }: { params: { id: string } }): JS
                 </button>
               </>
             )}
-          </div>
         </div>
-      </header>
+      </NestBannerPrincipal>
 
       {/* Modal de eliminación */}
       {showDeleteModal && (
@@ -484,11 +483,10 @@ export default function ResidentPage({ params }: { params: { id: string } }): JS
       ) : (
         <>
           {/* Información General */}
-          <section className="bg-white border border-gray-200 rounded-xl p-6">
-            <div className="flex items-center mb-4">
-              <UserIcon className="h-5 w-5 text-[#063a58]" />
-              <h2 className="ml-2 text-lg font-semibold text-[#063a58]">Información General</h2>
-            </div>
+          <NestInfoCard>
+            <NestTitleMain icon={<UserIcon className="h-5 w-5 text-[#063a58]" /> }>
+              Información General
+            </NestTitleMain>
             {renderRows([
               ["Email", resident.email ?? "—"],
               ["Teléfono", resident.phone ?? "—"],
@@ -496,21 +494,21 @@ export default function ResidentPage({ params }: { params: { id: string } }): JS
               ["Fecha Entrada", resident.moveInDate ?? "—"],
               ["Fecha Salida", resident.moveOutDate ?? "—"],
             ])}
-          </section>
+          </NestInfoCard>
 
           {/* Contactos */}
           <div className="grid gap-6 md:grid-cols-2">
-            <section className="bg-white border border-gray-200 rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <InformationCircleIcon className="h-5 w-5 text-[#063a58]" />
-                <h2 className="ml-2 text-lg font-semibold text-[#063a58]">Contacto Primario</h2>
-              </div>
+            
+            <NestInfoCard>
+              <NestTitleMain icon={<InformationCircleIcon className="h-5 w-5 text-[#063a58]" /> }>
+                Contacto Primario
+              </NestTitleMain>
               {renderRows([
                 ["Nombre", resident.primaryContact?.name ?? "—"],
                 ["Email", resident.primaryContact?.email ?? "—"],
                 ["Teléfono", resident.primaryContact?.phone ?? "—"],
               ])}
-            </section>
+            </NestInfoCard>
 
             <section className="bg-white border border-gray-200 rounded-xl p-6">
               <div className="flex items-center mb-4">

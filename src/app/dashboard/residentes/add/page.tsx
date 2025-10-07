@@ -166,7 +166,7 @@ export default function AddResident(): JSX.Element {
     try {
       const payload = sanitizeForm(form);
       await apiClient.post("/residents", payload);
-      router.push("/residents");
+      router.push("/dashboard/residents");
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
     } finally {
@@ -256,8 +256,8 @@ export default function AddResident(): JSX.Element {
           </div>
         </section>
 
-        {/* Contactos */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
+        {/* Contactos: Revisar esta seccion y sacarla mas adelante */}
+        {/* <section className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="flex items-center text-lg font-semibold mb-4 text-[#063a58]">
             <InformationCircleIcon className="h-5 w-5 mr-2 text-[#063a58]" />
             Contactos
@@ -339,7 +339,7 @@ export default function AddResident(): JSX.Element {
               <PlusCircleIcon className="h-5 w-5 mr-1 text-[#063a58]" /> Agregar contacto
             </button>
           </div>
-        </section>
+        </section> */}
 
         {/* Arrendamiento */}
         <section className="bg-white rounded-lg shadow-sm p-6">
@@ -394,8 +394,8 @@ export default function AddResident(): JSX.Element {
           </div>
         </section>
 
-        {/* Documentos */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
+        {/* Documentos: Actualizar para poder subit los documentos */}
+        {/* <section className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="flex items-center text-lg font-semibold mb-4 text-[#063a58]">
             <DocumentTextIcon className="h-5 w-5 mr-2 text-[#063a58]" />
             Documentos
@@ -430,7 +430,7 @@ export default function AddResident(): JSX.Element {
           >
             <PlusCircleIcon className="h-5 w-5 mr-1 text-[#063a58]" /> Agregar documento
           </button>
-        </section>
+        </section> */}
 
         {/* Extras */}
         <section className="bg-white rounded-lg shadow-sm p-6">

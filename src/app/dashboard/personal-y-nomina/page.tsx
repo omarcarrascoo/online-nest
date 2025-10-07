@@ -123,7 +123,7 @@ export default function EmployeesList() {
                   </td>
                   <td className="py-3 px-4">
                     <Link
-                      href={`/employees/${emp.id}`}
+                      href={`/dashboard/personal-y-nomina/${emp.id}`}
                       className="text-green-600 hover:text-blue-800 flex items-center gap-1"
                     >
                       <EyeIcon className="w-4 h-4" /> Ver
