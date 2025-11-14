@@ -86,11 +86,13 @@ export default function Header() {
 
   return (
     <header className="fixed inset-x-70 top-0 right-0 z-200">
-      {/* Backdrop gradient bar to match the login vibe */}
-      {/* <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="h-[72px] bg-[radial-gradient(900px_400px_at_50%_-40%,#0b4766_0%,transparent_60%)]" />
-        <div className="h-[72px] -mt-[72px] bg-[radial-gradient(700px_300px_at_100%_100%,#1b3d50_0%,transparent_60%)] opacity-80" />
-      </div> */}
+      {/* Backdrop gradient background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_50%_-10%,#0b4766_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_0%_100%,#0e5f6d_0%,transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_100%_100%,#1b3d50_0%,transparent_55%)]" />
+        <div className="absolute inset-0 opacity-40 mix-blend-overlay animate-pulse-slow bg-[linear-gradient(120deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0)_25%,rgba(255,255,255,0.06)_50%,rgba(255,255,255,0)_75%,rgba(255,255,255,0.06)_100%)]" />
+      </div>
 
       {/* Glass container */}
       <div className="relative h-[72px] mx-3 sm:mx-4 mt-3 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.25)]">

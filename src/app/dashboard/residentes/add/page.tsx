@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, FormEvent, ChangeEvent, JSX, useMemo } from "react";
+import React, {
+  useState,
+  FormEvent,
+  ChangeEvent,
+  JSX,
+  useMemo,
+  useEffect,
+} from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../../../utils/api";
 import {
@@ -12,78 +19,64 @@ import {
 } from "@heroicons/react/24/outline";
 
 /* ----------------------------- Types ----------------------------- */
-interface PrimaryContact {
-  name: string;
-  phone: string;
-  email: string;
-}
-interface EmergencyContact {
-  name: string;
-  relationship: string;
-  phone: string;
-  email: string;
-}
+interface PrimaryContact { name: string; phone: string; email: string; }
+interface EmergencyContact { name: string; relationship: string; phone: string; email: string; }
 interface LeaseInfo {
-  startDate: string;
-  endDate: string;
-  rentAmount: string;
-  securityDeposit: string;
-  leaseDocumentUrl: string;
-  terms: string;
+  startDate: string; endDate: string; rentAmount: string; securityDeposit: string;
+  leaseDocumentUrl: string; terms: string;
 }
-interface DocumentInfo {
-  type: "LEASE" | "ID" | "OTHER";
-  url: string;
-}
+interface DocumentInfo { type: "LEASE" | "ID" | "OTHER"; url: string; }
 interface ResidentForm {
-  fullName: string;
-  unitNumber: string;
-  email: string;
-  phone: string;
-  alternatePhone: string;
-  moveInDate: string;
-  moveOutDate: string;
-  status: "ACTIVE" | "INACTIVE" | "PENDING";
-  primaryContact: PrimaryContact;
-  emergencyContacts: EmergencyContact[];
-  lease: LeaseInfo;
-  documents: DocumentInfo[];
-  tags: string;
-  internalNotes: string;
+  fullName: string; unitNumber: string; email: string; phone: string; alternatePhone: string;
+  moveInDate: string; moveOutDate: string; status: "ACTIVE" | "INACTIVE" | "PENDING";
+  primaryContact: PrimaryContact; emergencyContacts: EmergencyContact[]; lease: LeaseInfo;
+  documents: DocumentInfo[]; tags: string; internalNotes: string;
 }
 
-/* ----------------------------- UI helpers ----------------------------- */
-const baseInput =
-  "w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-transparent px-3 py-3";
-const focusable =
-  "focus:outline-none focus:ring-2 focus:ring-teal-300/30 focus:border-transparent";
-const labelFloat =
-  "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/60 transition-all duration-200 peer-focus:-top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs";
+/* ----------------------------- Helpers ----------------------------- */
+const has = (v?: string) => !!(v && v.trim().length);
 
-function SectionCard({ title, icon, children }: { title: string; icon: JSX.Element; children: React.ReactNode }) {
+/* ----------------------------- Solid White UI ----------------------------- */
+const shell = "rounded-2xl border border-slate-200 bg-white shadow-sm";
+const shellPad = `${shell} px-5 py-4`;
+const section = `${shell} p-6 shadow-md`;
+
+const baseInput =
+  "peer w-full rounded-xl border border-slate-200 bg-white text-slate-900 " +
+  "px-3 py-3 shadow-xs focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-300 " +
+  "placeholder-transparent data-[filled=true]:bg-white data-[filled=true]:border-slate-300";
+
+const dateInput = baseInput + " pt-5";
+
+const labelFloat =
+  "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 transition-all duration-200 " +
+  "peer-focus:-top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-slate-700 " +
+  "peer-data-[filled=true]:-top-2 peer-data-[filled=true]:translate-y-0 peer-data-[filled=true]:text-xs peer-data-[filled=true]:text-slate-700";
+
+const labelFloatFixed =
+  "pointer-events-none absolute left-3 -top-2 translate-y-0 text-xs text-slate-700";
+
+/* ----------------------------- Section Card ----------------------------- */
+function SectionCard({
+  title, icon, children,
+}: { title: string; icon: JSX.Element; children: React.ReactNode }) {
   return (
-    <section className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-      <h2 className="flex items-center text-lg font-semibold mb-4 text-white">
-        <span className="mr-2">{icon}</span>
+    <section className={section}>
+      <h2 className="flex items-center text-lg font-semibold mb-4 text-slate-900">
+        <span className="mr-2 text-slate-500">{icon}</span>
         {title}
       </h2>
       {children}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px rounded-2xl [mask-image:linear-gradient(transparent,black,transparent)] bg-gradient-to-b from-white/10 via-transparent to-white/10"
-      />
     </section>
   );
 }
 
 function Chip({ text, onRemove }: { text: string; onRemove?: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/10 text-white/80 px-2.5 py-1 text-xs">
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1 text-xs">
       {text}
       {onRemove && (
-        <button type="button" onClick={onRemove} className="text-white/60 hover:text-white/90">
-          ×
-        </button>
+        <button type="button" onClick={onRemove} className="ml-0.5 rounded-full px-1 text-slate-500 hover:text-slate-700">×</button>
       )}
     </span>
   );
@@ -95,47 +88,25 @@ export default function AddResident(): JSX.Element {
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [tagDraft, setTagDraft] = useState("");
+  const [allowSubmit, setAllowSubmit] = useState(false); // anti-submit fantasma
 
   const [form, setForm] = useState<ResidentForm>({
-    fullName: "",
-    unitNumber: "",
-    email: "",
-    phone: "",
-    alternatePhone: "",
-    moveInDate: "",
-    moveOutDate: "",
-    status: "ACTIVE",
+    fullName: "", unitNumber: "", email: "", phone: "", alternatePhone: "",
+    moveInDate: "", moveOutDate: "", status: "ACTIVE",
     primaryContact: { name: "", phone: "", email: "" },
     emergencyContacts: [{ name: "", relationship: "", phone: "", email: "" }],
-    lease: {
-      startDate: "",
-      endDate: "",
-      rentAmount: "",
-      securityDeposit: "",
-      leaseDocumentUrl: "",
-      terms: "",
-    },
+    lease: { startDate: "", endDate: "", rentAmount: "", securityDeposit: "", leaseDocumentUrl: "", terms: "" },
     documents: [{ type: "LEASE", url: "" }],
-    tags: "",
-    internalNotes: "",
+    tags: "", internalNotes: "",
   });
 
   const field = "relative";
   const stepTitles = ["General", "Arrendamiento", "Extras"] as const;
 
-  const tags = useMemo(
-    () => form.tags.split(",").map(t => t.trim()).filter(Boolean),
-    [form.tags]
-  );
+  const tags = useMemo(() => form.tags.split(",").map(t => t.trim()).filter(Boolean), [form.tags]);
 
   const isStepValid = useMemo(() => {
-    if (step === 0) {
-      return Boolean(form.fullName.trim() && form.unitNumber.trim());
-    }
-    if (step === 1) {
-      // opcionalmente podrías exigir startDate o rentAmount
-      return true;
-    }
+    if (step === 0) return Boolean(form.fullName.trim() && form.unitNumber.trim());
     return true;
   }, [step, form.fullName, form.unitNumber]);
 
@@ -148,11 +119,7 @@ export default function AddResident(): JSX.Element {
   };
 
   const handleNestedChange =
-    <K extends keyof ResidentForm>(
-      section: K,
-      idx: number | null,
-      field: string
-    ) =>
+    <K extends keyof ResidentForm>(section: K, idx: number | null, field: string) =>
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const value = e.target.value;
       setForm(prev => {
@@ -175,37 +142,37 @@ export default function AddResident(): JSX.Element {
     setForm(prev => ({ ...prev, tags: unique.join(", ") }));
     setTagDraft("");
   };
+
   const removeTag = (t: string) => {
     const filtered = tags.filter(x => x !== t);
     setForm(prev => ({ ...prev, tags: filtered.join(", ") }));
   };
 
   const sanitizeForm = (f: ResidentForm) => {
-    const payload: any = {
-      fullName: f.fullName,
-      unitNumber: f.unitNumber,
-      status: f.status,
-    };
-    if (f.email.trim()) payload.email = f.email;
-    if (f.phone.trim()) payload.phone = f.phone;
-    if (f.alternatePhone.trim()) payload.alternatePhone = f.alternatePhone;
-    if (f.moveInDate) payload.moveInDate = f.moveInDate;
-    if (f.moveOutDate) payload.moveOutDate = f.moveOutDate;
-    if (Object.values(f.primaryContact).some(v => v.trim())) {
+    const payload: any = { fullName: f.fullName, unitNumber: f.unitNumber, status: f.status };
+    if (has(f.email)) payload.email = f.email;
+    if (has(f.phone)) payload.phone = f.phone;
+    if (has(f.alternatePhone)) payload.alternatePhone = f.alternatePhone;
+    if (has(f.moveInDate)) payload.moveInDate = f.moveInDate;
+    if (has(f.moveOutDate)) payload.moveOutDate = f.moveOutDate;
+    if (Object.values(f.primaryContact).some(v => has(v as string))) {
       payload.primaryContact = { ...f.primaryContact, type: "PRIMARY" };
     }
-    const ecs = f.emergencyContacts.filter(c => Object.values(c).some(v => v.trim()));
+    const ecs = f.emergencyContacts.filter(c => Object.values(c).some(v => has(v as string)));
     if (ecs.length) payload.emergencyContacts = ecs.map(c => ({ ...c, type: "EMERGENCY" }));
-    if (f.lease.startDate || f.lease.rentAmount.trim()) payload.lease = { ...f.lease };
-    const docs = f.documents.filter(d => d.url.trim());
+    if (has(f.lease.startDate) || has(f.lease.rentAmount)) payload.lease = { ...f.lease };
+    const docs = f.documents.filter(d => has(d.url));
     if (docs.length) payload.documents = docs;
-    if (f.tags.trim()) payload.tags = f.tags.split(",").map(t => t.trim());
-    if (f.internalNotes.trim()) payload.internalNotes = f.internalNotes;
+    if (has(f.tags)) payload.tags = f.tags;
+    if (has(f.internalNotes)) payload.internalNotes = f.internalNotes;
     return payload;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!allowSubmit) return; // evita submits fantasma
+    setAllowSubmit(false);
+
     if (!isStepValid) return;
     setSaving(true);
     try {
@@ -219,26 +186,57 @@ export default function AddResident(): JSX.Element {
     }
   };
 
+  /* ----------------------------- Global hotkeys (Ctrl/Cmd+S, Arrows) ----------------------------- */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      const metaS = (e.metaKey || e.ctrlKey) && k === "s";
+      if (metaS) {
+        e.preventDefault();
+        setAllowSubmit(true);
+        document.querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
+        return;
+      }
+      if (k === "arrowright") {
+        e.preventDefault();
+        document.querySelector<HTMLButtonElement>("[data-next]")?.click();
+        return;
+      }
+      if (k === "arrowleft") {
+        e.preventDefault();
+        document.querySelector<HTMLButtonElement>("[data-prev]")?.click();
+        return;
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
   /* ----------------------------- Layout ----------------------------- */
   return (
     <div className="max-w-6xl mx-auto my-8 px-4">
-      {/* Header glass */}
+      {/* Header solid white */}
       <div className="mb-6">
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-wide">Agregar Residente</h1>
-          <p className="text-sm text-white/70 mt-1">
-            Completa la información en 3 pasos. Puedes volver y ajustar antes de guardar.
-          </p>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-px rounded-2xl [mask-image:linear-gradient(transparent,black,transparent)] bg-gradient-to-b from-white/10 via-transparent to-white/10"
-          />
+        <div className={shellPad}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-wide">
+                Agregar Residente
+              </h1>
+              <p className="text-sm text-slate-600 mt-1">
+                Completa la información en 3 pasos. Puedes volver y ajustar antes de guardar.
+              </p>
+            </div>
+            <span className="hidden sm:inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">
+              Ctrl/Cmd + S para guardar
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Stepper */}
+      {/* Stepper solid */}
       <div className="mb-6">
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3">
+        <div className={`${shell} px-4 py-3`}>
           <ol className="flex items-center justify-between gap-2">
             {stepTitles.map((label, i) => {
               const active = step === i;
@@ -248,21 +246,19 @@ export default function AddResident(): JSX.Element {
                   <div className="flex items-center gap-2">
                     <span
                       className={[
-                        "h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold",
+                        "h-7 w-7 rounded-xl flex items-center justify-center text-xs font-semibold",
                         done
                           ? "bg-teal-600 text-white"
                           : active
-                          ? "bg-white/10 text-white border border-white/20"
-                          : "bg-white/5 text-white/60 border border-white/10",
+                          ? "bg-white text-slate-900 border border-slate-200"
+                          : "bg-white text-slate-500 border border-slate-200",
                       ].join(" ")}
                     >
                       {done ? "✓" : i + 1}
                     </span>
-                    <span className={active ? "text-white" : "text-white/70 text-sm"}>{label}</span>
+                    <span className={active ? "text-slate-900" : "text-slate-600 text-sm"}>{label}</span>
                   </div>
-                  {i < stepTitles.length - 1 && (
-                    <div className="flex-1 mx-3 h-px bg-white/10" />
-                  )}
+                  {i < stepTitles.length - 1 && <div className="flex-1 mx-3 h-px bg-slate-200" />}
                 </li>
               );
             })}
@@ -270,103 +266,61 @@ export default function AddResident(): JSX.Element {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid lg:grid-cols-[1fr_320px] gap-6">
+      {/* Content */}
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            const target = e.target as HTMLElement;
+            const tag = target.tagName.toLowerCase();
+            const isTextArea = tag === "textarea";
+            if (!isTextArea) e.preventDefault(); // sin submits por Enter en inputs
+          }
+        }}
+        className="grid lg:grid-cols-[1fr_320px] gap-6"
+      >
         {/* Left: Steps content */}
         <div className="space-y-6">
           {/* STEP 0: General */}
           {step === 0 && (
-            <SectionCard
-              title="Información General"
-              icon={<UserIcon className="h-5 w-5 text-teal-200" />}
-            >
+            <SectionCard title="Información General" icon={<UserIcon className="h-5 w-5" />}>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className={field}>
-                  <input
-                    name="fullName"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    placeholder=" "
-                    required
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="fullName" value={form.fullName} onChange={handleChange} placeholder=" " required className={baseInput} data-filled={has(form.fullName)} />
                   <label className={labelFloat}>Nombre completo *</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="unitNumber"
-                    value={form.unitNumber}
-                    onChange={handleChange}
-                    placeholder=" "
-                    required
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="unitNumber" value={form.unitNumber} onChange={handleChange} placeholder=" " required className={baseInput} data-filled={has(form.unitNumber)} />
                   <label className={labelFloat}>Número de unidad *</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder=" " className={baseInput} data-filled={has(form.email)} />
                   <label className={labelFloat}>Email</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="phone" value={form.phone} onChange={handleChange} placeholder=" " className={baseInput} data-filled={has(form.phone)} />
                   <label className={labelFloat}>Teléfono</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="alternatePhone"
-                    value={form.alternatePhone}
-                    onChange={handleChange}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="alternatePhone" value={form.alternatePhone} onChange={handleChange} placeholder=" " className={baseInput} data-filled={has(form.alternatePhone)} />
                   <label className={labelFloat}>Teléfono alternativo</label>
                 </div>
                 <div className={field}>
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                    className={`${baseInput} ${focusable} appearance-none pr-8`}
-                  >
+                  <select name="status" value={form.status} onChange={handleChange} className={baseInput + " appearance-none pr-8"} data-filled={true}>
                     <option value="ACTIVE">Activo</option>
                     <option value="INACTIVE">Inactivo</option>
                     <option value="PENDING">Pendiente</option>
                   </select>
-                  <label className={`${labelFloat} -top-2 translate-y-0 text-xs`}>Estado</label>
+                  <label className={labelFloat + " -top-2 translate-y-0 text-xs"}>Estado</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="moveInDate"
-                    type="date"
-                    value={form.moveInDate}
-                    onChange={handleChange}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
-                  <label className={labelFloat}>Fecha de entrada</label>
+                  <input name="moveInDate" type="date" value={form.moveInDate} onChange={handleChange} placeholder=" " className={dateInput} data-filled={has(form.moveInDate)} />
+                  <label className={labelFloatFixed}>Fecha de entrada</label>
                 </div>
                 <div className={field}>
-                  <input
-                    name="moveOutDate"
-                    type="date"
-                    value={form.moveOutDate}
-                    onChange={handleChange}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
-                  <label className={labelFloat}>Fecha de salida</label>
+                  <input name="moveOutDate" type="date" value={form.moveOutDate} onChange={handleChange} placeholder=" " className={dateInput} data-filled={has(form.moveOutDate)} />
+                  <label className={labelFloatFixed}>Fecha de salida</label>
                 </div>
               </div>
             </SectionCard>
@@ -374,78 +328,31 @@ export default function AddResident(): JSX.Element {
 
           {/* STEP 1: Lease */}
           {step === 1 && (
-            <SectionCard
-              title="Información de Arrendamiento"
-              icon={<CurrencyDollarIcon className="h-5 w-5 text-teal-200" />}
-            >
+            <SectionCard title="Información de Arrendamiento" icon={<CurrencyDollarIcon className="h-5 w-5" />}>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className={field}>
-                  <input
-                    name="lease.startDate"
-                    type="date"
-                    value={form.lease.startDate}
-                    onChange={handleNestedChange("lease", null, "startDate")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
-                  <label className={labelFloat}>Inicio de contrato</label>
+                  <input name="lease.startDate" type="date" value={form.lease.startDate} onChange={handleNestedChange("lease", null, "startDate")} placeholder=" " className={dateInput} data-filled={has(form.lease.startDate)} />
+                  <label className={labelFloatFixed}>Inicio de contrato</label>
                 </div>
-
                 <div className={field}>
-                  <input
-                    name="lease.endDate"
-                    type="date"
-                    value={form.lease.endDate}
-                    onChange={handleNestedChange("lease", null, "endDate")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
-                  <label className={labelFloat}>Fin de contrato</label>
+                  <input name="lease.endDate" type="date" value={form.lease.endDate} onChange={handleNestedChange("lease", null, "endDate")} placeholder=" " className={dateInput} data-filled={has(form.lease.endDate)} />
+                  <label className={labelFloatFixed}>Fin de contrato</label>
                 </div>
-
                 <div className={field}>
-                  <input
-                    name="lease.rentAmount"
-                    value={form.lease.rentAmount}
-                    onChange={handleNestedChange("lease", null, "rentAmount")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="lease.rentAmount" value={form.lease.rentAmount} onChange={handleNestedChange("lease", null, "rentAmount")} placeholder=" " className={baseInput} data-filled={has(form.lease.rentAmount)} />
                   <label className={labelFloat}>Monto de renta</label>
                 </div>
-
                 <div className={field}>
-                  <input
-                    name="lease.securityDeposit"
-                    value={form.lease.securityDeposit}
-                    onChange={handleNestedChange("lease", null, "securityDeposit")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="lease.securityDeposit" value={form.lease.securityDeposit} onChange={handleNestedChange("lease", null, "securityDeposit")} placeholder=" " className={baseInput} data-filled={has(form.lease.securityDeposit)} />
                   <label className={labelFloat}>Depósito</label>
                 </div>
-
                 <div className={field + " md:col-span-2"}>
-                  <input
-                    name="lease.leaseDocumentUrl"
-                    value={form.lease.leaseDocumentUrl}
-                    onChange={handleNestedChange("lease", null, "leaseDocumentUrl")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable}`}
-                  />
+                  <input name="lease.leaseDocumentUrl" value={form.lease.leaseDocumentUrl} onChange={handleNestedChange("lease", null, "leaseDocumentUrl")} placeholder=" " className={baseInput} data-filled={has(form.lease.leaseDocumentUrl)} />
                   <label className={labelFloat}>URL del documento</label>
                 </div>
-
                 <div className={field + " md:col-span-2"}>
-                  <textarea
-                    name="lease.terms"
-                    rows={3}
-                    value={form.lease.terms}
-                    onChange={handleNestedChange("lease", null, "terms")}
-                    placeholder=" "
-                    className={`peer ${baseInput} ${focusable} min-h-[96px]`}
-                  />
-                  <label className={labelFloat}>Términos</label>
+                  <textarea name="lease.terms" rows={3} value={form.lease.terms} onChange={handleNestedChange("lease", null, "terms")} placeholder=" " className={baseInput + " min-h-[96px]"} data-filled={has(form.lease.terms)} />
+                  <label className={labelFloatFixed}>Términos</label>
                 </div>
               </div>
             </SectionCard>
@@ -453,38 +360,33 @@ export default function AddResident(): JSX.Element {
 
           {/* STEP 2: Extras */}
           {step === 2 && (
-            <SectionCard title="Extras" icon={<TagIcon className="h-5 w-5 text-teal-200" />}>
+            <SectionCard title="Extras" icon={<TagIcon className="h-5 w-5" />}>
               <div className="grid gap-4">
-                {/* Tag chips input */}
                 <div>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {tags.map(t => (
-                      <Chip key={t} text={t} onRemove={() => removeTag(t)} />
-                    ))}
-                    {!tags.length && <span className="text-xs text-white/50">Sin etiquetas</span>}
+                    {tags.map(t => (<Chip key={t} text={t} onRemove={() => removeTag(t)} />))}
+                    {!tags.length && <span className="text-xs text-slate-500">Sin etiquetas</span>}
                   </div>
                   <div className="flex gap-2">
                     <input
                       value={tagDraft}
                       onChange={e => setTagDraft(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addTag();
-                        }
-                      }}
+                      onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
                       placeholder="Agregar etiqueta y Enter"
-                      className={`${baseInput} ${focusable}`}
+                      className={baseInput}
+                      data-filled={has(tagDraft)}
+                      inputMode="text"
+                      autoCapitalize="none"
+                      autoCorrect="off"
                     />
                     <button
                       type="button"
                       onClick={addTag}
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 hover:bg-slate-50 active:scale-[0.98] transition shadow-sm"
                     >
                       Añadir
                     </button>
                   </div>
-                  {/* Guardamos también como string para tu API existente */}
                   <input type="hidden" name="tags" value={form.tags} readOnly />
                 </div>
 
@@ -495,9 +397,10 @@ export default function AddResident(): JSX.Element {
                     placeholder=" "
                     value={form.internalNotes}
                     onChange={handleChange}
-                    className={`peer ${baseInput} ${focusable} min-h-[120px]`}
+                    className={baseInput + " min-h-[120px]"}
+                    data-filled={has(form.internalNotes)}
                   />
-                  <label className={labelFloat}>Notas internas</label>
+                  <label className={labelFloatFixed}>Notas internas</label>
                 </div>
               </div>
             </SectionCard>
@@ -506,61 +409,61 @@ export default function AddResident(): JSX.Element {
 
         {/* Right: Live summary */}
         <aside className="space-y-3">
-          <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4">
+          <div className={`${shell} p-4`}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-white/90">Resumen</h3>
+              <h3 className="text-sm font-semibold text-slate-900">Resumen</h3>
               {isStepValid ? (
-                <CheckCircleIcon className="h-5 w-5 text-teal-300" />
+                <CheckCircleIcon className="h-5 w-5 text-teal-600" />
               ) : (
-                <ExclamationTriangleIcon className="h-5 w-5 text-amber-300" />
+                <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />
               )}
             </div>
-            <ul className="text-sm text-white/80 space-y-1">
-              <li><span className="text-white/60">Nombre:</span> {form.fullName || "—"}</li>
-              <li><span className="text-white/60">Unidad:</span> {form.unitNumber || "—"}</li>
-              <li><span className="text-white/60">Estado:</span> {form.status}</li>
-              <li><span className="text-white/60">Email:</span> {form.email || "—"}</li>
-              <li><span className="text-white/60">Teléfono:</span> {form.phone || "—"}</li>
-              <li><span className="text-white/60">Entrada:</span> {form.moveInDate || "—"}</li>
-              <li><span className="text-white/60">Salida:</span> {form.moveOutDate || "—"}</li>
+            <ul className="text-sm text-slate-700 space-y-1">
+              <li><span className="text-slate-500">Nombre:</span> {form.fullName || "—"}</li>
+              <li><span className="text-slate-500">Unidad:</span> {form.unitNumber || "—"}</li>
+              <li><span className="text-slate-500">Estado:</span> {form.status}</li>
+              <li><span className="text-slate-500">Email:</span> {form.email || "—"}</li>
+              <li><span className="text-slate-500">Teléfono:</span> {form.phone || "—"}</li>
+              <li><span className="text-slate-500">Entrada:</span> {form.moveInDate || "—"}</li>
+              <li><span className="text-slate-500">Salida:</span> {form.moveOutDate || "—"}</li>
             </ul>
-            <div className="mt-3 h-px bg-white/10" />
+            <div className="mt-3 h-px bg-slate-200" />
             <div className="mt-3">
-              <p className="text-xs text-white/60 mb-1">Etiquetas</p>
+              <p className="text-xs text-slate-500 mb-1">Etiquetas</p>
               <div className="flex flex-wrap gap-2">
                 {tags.map(t => <Chip key={t} text={t} />)}
-                {!tags.length && <span className="text-xs text-white/50">Añade etiquetas</span>}
+                {!tags.length && <span className="text-xs text-slate-500">Añade etiquetas</span>}
               </div>
             </div>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-px rounded-2xl [mask-image:linear-gradient(transparent,black,transparent)] bg-gradient-to-b from-white/10 via-transparent to-white/10"
-            />
           </div>
         </aside>
 
         {/* Sticky actions */}
         <div className="lg:col-span-2 sticky bottom-4 self-end">
-          <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-3 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-            <div className="text-sm text-white/70">
-              Paso {step + 1} de 3 · <span className={isStepValid ? "text-teal-300" : "text-amber-300"}>
-              {isStepValid ? "Completo" : "Revisa campos obligatorios"}
+          <div className={`${shell} p-3 flex items-center justify-between`}>
+            <div className="text-sm text-slate-600">
+              Paso {step + 1} de 3 ·{" "}
+              <span className={isStepValid ? "text-teal-700" : "text-amber-600"}>
+                {isStepValid ? "Completo" : "Revisa campos obligatorios"}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                data-prev
                 onClick={() => setStep(s => (s > 0 ? ((s - 1) as typeof step) : s))}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 hover:bg-slate-50 active:scale-[0.98] transition shadow-sm"
               >
                 Anterior
               </button>
+
               {step < 2 ? (
                 <button
                   type="button"
+                  data-next
                   disabled={!isStepValid}
                   onClick={() => isStepValid && setStep(s => ((s + 1) as typeof step))}
-                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-medium text-white active:scale-[0.98] transition"
+                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-medium text-white active:scale-[0.98] transition shadow-sm"
                 >
                   Siguiente
                 </button>
@@ -568,7 +471,8 @@ export default function AddResident(): JSX.Element {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-medium text-white active:scale-[0.98] transition"
+                  onClick={() => setAllowSubmit(true)}
+                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-medium text-white active:scale-[0.98] transition shadow-sm"
                 >
                   {saving ? (
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden>
@@ -581,29 +485,9 @@ export default function AddResident(): JSX.Element {
                 </button>
               )}
             </div>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-px rounded-2xl [mask-image:linear-gradient(transparent,black,transparent)] bg-gradient-to-b from-white/10 via-transparent to-white/10"
-            />
           </div>
         </div>
       </form>
-
-      {/* Keyboard shortcuts */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function(){
-              document.addEventListener('keydown', function(e){
-                const metaS = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's';
-                if(metaS){ e.preventDefault(); document.querySelector('button[type="submit"]')?.click(); }
-                if(e.key === 'ArrowRight'){ e.preventDefault(); document.querySelector('[data-next]')?.click(); }
-                if(e.key === 'ArrowLeft'){ e.preventDefault(); document.querySelector('[data-prev]')?.click(); }
-              });
-            })();
-          `,
-        }}
-      />
     </div>
   );
 }
