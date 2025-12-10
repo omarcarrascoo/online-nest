@@ -22,15 +22,15 @@ type Item = { label: string; path: string; icon: React.ComponentType<any> };
 const navItems: Item[] = [
   { label: "Dashboard", path: "/dashboard", icon: House },
   { label: "Residentes", path: "/dashboard/residentes", icon: UsersThree },
-  { label: "Proveedores", path: "/dashboard/provedores", icon: Package },
-  { label: "Personal y Nómina", path: "/dashboard/personal-y-nomina", icon: Suitcase },
-  { label: "Pagos", path: "/dashboard/pagos", icon: CreditCard },
-  { label: "Ingresos", path: "/dashboard/egresos-ingresos", icon: ArrowUp },
-  { label: "Fondo y Presupuestos", path: "/dashboard/fondo-y-presupuestos", icon: ChartBar },
-  { label: "Banca y Facturación", path: "/dashboard/banca-y-facturacion", icon: FileDoc },
-  { label: "Caseta y Accesos", path: "/dashboard/caseta-y-accesos", icon: LockSimple },
-  { label: "Amenidades", path: "/dashboard/amenidades", icon: Gift },
-  { label: "Morosidad y Multas", path: "/dashboard/morosidad-y-multas", icon: WarningCircle },
+  // { label: "Proveedores", path: "/dashboard/provedores", icon: Package },
+  // { label: "Personal y Nómina", path: "/dashboard/personal-y-nomina", icon: Suitcase },
+  // { label: "Pagos", path: "/dashboard/pagos", icon: CreditCard },
+  // { label: "Ingresos", path: "/dashboard/egresos-ingresos", icon: ArrowUp },
+  // { label: "Fondo y Presupuestos", path: "/dashboard/fondo-y-presupuestos", icon: ChartBar },
+  // { label: "Banca y Facturación", path: "/dashboard/banca-y-facturacion", icon: FileDoc },
+  // { label: "Caseta y Accesos", path: "/dashboard/caseta-y-accesos", icon: LockSimple },
+  // { label: "Amenidades", path: "/dashboard/amenidades", icon: Gift },
+  // { label: "Morosidad y Multas", path: "/dashboard/morosidad-y-multas", icon: WarningCircle },
 ];
 
 export default function SidebarMenu() {
@@ -47,20 +47,19 @@ export default function SidebarMenu() {
         "bg-white/5",
         "shadow-[0_20px_40px_rgba(0,0,0,0.4)]",
         "flex flex-col",
-        "justify-center"
+        // antes tenías justify-center
+        "justify-start"
       ].join(" ")}
     >
       {/* Gradient backdrops to match header */}
-      
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_100%_0%,#0b4766_0%,transparent_60%)] opacity-80" />
         <div className="absolute inset-0 bg-[radial-gradient(800px_600px_at_0%_100%,#1b3d50_0%,transparent_55%)] opacity-60" />
-
         {/* subtle grid */}
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
-      
-    {/* BRAND */}
+
+      {/* BRAND */}
       <div className="relative flex items-center gap-3 px-6 pt-6 pb-5">
         <div className="relative h-10 w-10">
           <Image src="/logo.png" alt="Nest Living" fill className="object-contain drop-shadow" priority />
@@ -70,6 +69,7 @@ export default function SidebarMenu() {
           <p className="text-xs text-white/60">Panel de administración</p>
         </div>
       </div>
+
       {/* Divider */}
       <div className="relative mx-6 h-px bg-white/10" />
 
@@ -122,7 +122,7 @@ export default function SidebarMenu() {
       </nav>
 
       {/* FOOTER */}
-      <div className="relative bottom-0 left-0 right-0 p-4">
+      <div className="relative bottom-0 left-0 right-0 p-4 mt-auto">
         <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
           <p className="text-xs text-white/70">
             Sesión segura <span className="text-teal-300">•</span> TLS activo
