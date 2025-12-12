@@ -16,7 +16,7 @@ export default function Dashboard() {
   const defaultStartMonth = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, '0')}`;
 
   return (
-    <div className="p-6 space-y-10 max-w-5xl mx-auto">
+    <div className="p-6 space-y-10 max-w-5xl">
       <h1 className="text-2xl font-bold">Panel de Administración Principal</h1>
       <ReserveFund autoFetch/>
       <p className="text-gray-600">
